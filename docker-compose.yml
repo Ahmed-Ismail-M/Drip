@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:latest
+    restart: always
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./mysql_data/db:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: simpledb
+      MYSQL_PASSWORD: msyql
+      MYSQL_ROOT_PASSWORD: mysql
+  web:
+    build: .
+    container_name: simpleapp
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
