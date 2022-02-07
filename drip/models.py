@@ -1,3 +1,4 @@
+from turtle import ondrag
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -7,7 +8,7 @@ class User(AbstractUser):
     pass
 
 
-class Records(models.Model):
+class Jogging(models.Model):
+    date = models.DateTimeField()
+    distance = models.IntegerField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    start = models.DateTimeField()
-    end = models.DateTimeField()

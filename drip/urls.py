@@ -6,6 +6,7 @@ urlpatterns = [
     path("", views.index, name="index"),
     path("register", views.RegisterAPI.as_view(), name="register"),  # register new user
     path("login", views.login_view, name="login"),  # login
-    path("logout", views.logout_view, name="logout")  # logout
+    path("logout", views.logout_view, name="logout"),  # logout
+    path("jogs", views.jogging, name="jogs"),  # logout
 
 ]
