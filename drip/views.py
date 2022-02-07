@@ -1,10 +1,11 @@
 # Create your views here.
 from django.contrib.auth import authenticate, login, logout
-from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
+from django.http import HttpResponseRedirect,  HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
 from .models import Jogging
 from .serializers import JoggingSerializer
+from .decorators import auth_required
 from rest_framework import generics
 from rest_framework.response import Response
 
@@ -54,10 +55,8 @@ def logout_view(request):
     logout(request)
     return render(request, "login.html", {"message": "logged out"})
 
+@auth_required
 def jogging(request):
-    print(request.user.is_authenticated)
-    result = ""
-    if request.user.is_authenticated:
-        jogs = Jogging.objects.all()
-        result = JoggingSerializer(jogs, many=True).data
+    jogs = Jogging.objects.all()
+    result = JoggingSerializer(jogs, many=True).data
     return HttpResponse(result, content_type="text/plan")
