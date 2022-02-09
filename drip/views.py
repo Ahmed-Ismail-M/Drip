@@ -10,11 +10,7 @@ from .decorators import auth_required, allowed_users
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .serializers import UserSerializer, RegisterSerializer
-
-
-# Create your views here.
-
+from .serializers import UserSerializer, RegisterSerializer, RegisterAdminSerializer
 
 def index(request):
     if not request.user.is_authenticated:
@@ -52,6 +48,23 @@ class AddUserManager(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         group , created= Group.objects.get_or_create(name="UserManager")
+        group.save()
+        user.groups.add(group)
+
+        return Response({
+            "user": UserSerializer(user, context=self.get_serializer_context()).data,
+
+        })  # return the user data in json format
+
+class AddAdmin(generics.GenericAPIView):
+    """ Generic view to register a new user manager"""
+    serializer_class = RegisterAdminSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        group , created= Group.objects.get_or_create(name="Admin")
         group.save()
         user.groups.add(group)
 
@@ -115,7 +128,7 @@ def logout_view(request):
     return render(request, "login.html", {"message": "logged out"})
 
 @auth_required
-@allowed_users(allowed_roles=['Customer', 'admin'])
+@allowed_users(allowed_roles=['Customer', 'Admin'])
 @api_view(['GET'])
 def jogging(request, username: str):
     jogs = Jogging.objects.filter(user__username= username)
@@ -123,7 +136,7 @@ def jogging(request, username: str):
     return Response(result.data)
 
 @auth_required
-@allowed_users(allowed_roles=['UserManager', 'admin'])
+@allowed_users(allowed_roles=['UserManager', 'Admin'])
 @api_view(['GET'])
 def users(request):
     users = User.objects.all()
