@@ -1,6 +1,6 @@
 # Create your views here.
+from tokenize import group
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import Group
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
@@ -10,75 +10,41 @@ from .decorators import auth_required, allowed_users
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .serializers import UserSerializer, RegisterSerializer, RegisterAdminSerializer
+from .serializers import UserSerializer, RegisterSerializer
+from .generics import RegisterAPI
 
 def index(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect(reverse("login"))
     if request.user.groups.exists():
-        if request.user.groups.all()[0].name == "Customer":
+        group_name = request.user.groups.all()[0].name
+        if group_name == "Customer":
             return HttpResponseRedirect(reverse("jogs", kwargs={'username':request.user.username}))
-        if request.user.groups.all()[0].name == "UserManager":
+        if group_name == "UserManager":
             return HttpResponseRedirect(reverse("users"))
     return HttpResponse("DashBoard")
 
-class RegisterAPI(generics.GenericAPIView):
-    """ Generic view to register a new user"""
-    serializer_class = RegisterSerializer
-
+class AddAdmin(RegisterAPI):
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        group , created= Group.objects.get_or_create(name="Customer")
-        group.save()
-        user.groups.add(group)
+        kwargs["group_name"] = "Admin"
+        return super().post(request, *args, **kwargs)
 
-        return Response({
-            "user": UserSerializer(user, context=self.get_serializer_context()).data,
-
-        })  # return the user data in json format
-
-class AddUserManager(generics.GenericAPIView):
-    """ Generic view to register a new user manager"""
-    serializer_class = RegisterSerializer
-
+class AddUserManager(RegisterAPI):
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        group , created= Group.objects.get_or_create(name="UserManager")
-        group.save()
-        user.groups.add(group)
+        kwargs["group_name"] = "UserManager"
+        return super().post(request, *args, **kwargs)
 
-        return Response({
-            "user": UserSerializer(user, context=self.get_serializer_context()).data,
-
-        })  # return the user data in json format
-
-class AddAdmin(generics.GenericAPIView):
-    """ Generic view to register a new user manager"""
-    serializer_class = RegisterAdminSerializer
-
+class AddCustomer(RegisterAPI):
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        group , created= Group.objects.get_or_create(name="Admin")
-        group.save()
-        user.groups.add(group)
+        kwargs["group_name"] = "Customer"
+        return super().post(request, *args, **kwargs)
 
-        return Response({
-            "user": UserSerializer(user, context=self.get_serializer_context()).data,
-
-        })  # return the user data in json format
 
 class JogsAPI(generics.RetrieveUpdateDestroyAPIView):
-    """ Generic view to crud user"""
+    """ Generic view to crud Jog"""
     serializer_class = JoggingSerializer
     lookup_field = 'id'
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    # lookup_url_kwarg = 'username'
     def get_queryset(self):
         return Jogging.objects.filter(user= self.request.user)
 
@@ -117,7 +83,7 @@ def login_view(request):
                             username=username, password=password)  # check user credentials
         if user is not None:  # if found a user with right data
             login(request, user)  # login to the system
-            return HttpResponseRedirect(reverse("index"))  # redirect to register route
+            return HttpResponseRedirect(reverse("index"))  # redirect to index
         return render(request, "login.html", {"message": "invalid inputs"})
     if not request.user.is_authenticated:  # ask for data if not registered user
         return render(request, "login.html")
@@ -139,6 +105,6 @@ def jogging(request, username: str):
 @allowed_users(allowed_roles=['UserManager', 'Admin'])
 @api_view(['GET'])
 def users(request):
-    users = User.objects.all()
+    users = User.objects.exclude(groups__name="Admin")
     result = UserSerializer(users, many=True)
     return Response(result.data)
