@@ -19,10 +19,11 @@ from .serializers import UserSerializer, RegisterSerializer
 def index(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect(reverse("login"))
-    if request.user.groups.all()[0].name == "Customer":
-        return HttpResponseRedirect(reverse("jogs", kwargs={'username':request.user.username}))
-    if request.user.groups.all()[0].name == "UserManager":
-        return HttpResponseRedirect(reverse("users"))
+    if request.user.groups.exists():
+        if request.user.groups.all()[0].name == "Customer":
+            return HttpResponseRedirect(reverse("jogs", kwargs={'username':request.user.username}))
+        if request.user.groups.all()[0].name == "UserManager":
+            return HttpResponseRedirect(reverse("users"))
     return HttpResponse("DashBoard")
 
 class RegisterAPI(generics.GenericAPIView):
@@ -43,7 +44,7 @@ class RegisterAPI(generics.GenericAPIView):
         })  # return the user data in json format
 
 class AddUserManager(generics.GenericAPIView):
-    """ Generic view to register a new user"""
+    """ Generic view to register a new user manager"""
     serializer_class = RegisterSerializer
 
     def post(self, request, *args, **kwargs):
@@ -60,7 +61,7 @@ class AddUserManager(generics.GenericAPIView):
         })  # return the user data in json format
 
 class JogsAPI(generics.RetrieveUpdateDestroyAPIView):
-    """ Generic view to crud new jogging time"""
+    """ Generic view to crud user"""
     serializer_class = JoggingSerializer
     lookup_field = 'id'
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -74,10 +75,10 @@ class JogsAPI(generics.RetrieveUpdateDestroyAPIView):
         jog = serializer.save(user= request.user)
         return Response({
             "jogging": JoggingSerializer(jog, context=self.get_serializer_context()).data,
-        })  # return the user data in json format
+        })  # return the jog data in json format
 
 class UsersAPI(generics.RetrieveUpdateDestroyAPIView):
-    """ Generic view to crud new jogging time"""
+    """ Generic view to crud user"""
     serializer_class = UserSerializer
     lookup_field = 'id'
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -88,9 +89,9 @@ class UsersAPI(generics.RetrieveUpdateDestroyAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        jog = serializer.save(user= request.user)
+        user = serializer.save(user= request.user)
         return Response({
-            "jogging": JoggingSerializer(jog, context=self.get_serializer_context()).data,
+            "user": JoggingSerializer(user, context=self.get_serializer_context()).data,
         })  # return the user data in json format
 
 
