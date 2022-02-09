@@ -22,4 +22,4 @@ class RegisterSerializer(serializers.ModelSerializer):
 class JoggingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Jogging
-        fields = "__all__"
+        fields = ("id", "date", "distance")

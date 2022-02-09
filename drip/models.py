@@ -7,7 +7,12 @@ class User(AbstractUser):
     pass
 
 
+
 class Jogging(models.Model):
     date = models.DateTimeField()
     distance = models.IntegerField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    @property
+    def username(self):
+        return "%s"%(self.model.user.username) 
