@@ -92,7 +92,7 @@ class UsersAPI(generics.RetrieveUpdateDestroyAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save(user=request.user)
         return Response({
-            "user": JoggingSerializer(user, context=self.get_serializer_context()).data,
+            "user": UserSerializer(user, context=self.get_serializer_context()).data,
         })  # return the user data in json format
 
 
