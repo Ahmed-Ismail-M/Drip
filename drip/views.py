@@ -77,6 +77,9 @@ class UsersAPI(generics.RetrieveUpdateDestroyAPIView):
 
     # lookup_url_kwarg = 'username'
     def get_queryset(self):
+        if self.request.user.groups.exists():  # filter objects according to the permissions
+            if self.request.user.groups.all()[0].name != "Admin":
+                return User.objects.exclude(groups__name="Admin")
         return User.objects.all()
 
     @method_decorator(auth_required)
