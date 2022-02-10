@@ -1,7 +1,8 @@
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from rest_framework import generics
 from .serializers import RegisterSerializer, UserSerializer
 from django.contrib.auth.models import Group
-from rest_framework.response import Response
 
 class RegisterAPI(generics.GenericAPIView):
     """ Generic view to register a new user"""
@@ -15,7 +16,4 @@ class RegisterAPI(generics.GenericAPIView):
         group.save()
         user.groups.add(group)
 
-        return Response({
-            "user": UserSerializer(user, context=self.get_serializer_context()).data,
-
-        })  # return the user data in json format
+        return HttpResponseRedirect(reverse("index"))

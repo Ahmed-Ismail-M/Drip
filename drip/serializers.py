@@ -23,3 +23,5 @@ class JoggingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Jogging
         fields = ("id", "date", "distance")
+    def create(self, validated_data):
+        return Jogging.objects.create(**validated_data)
