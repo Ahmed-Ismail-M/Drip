@@ -1,8 +1,10 @@
 from rest_framework import serializers
-from .models import  User, Jogging
+from .models import User, Jogging
+
 
 class UserSerializer(serializers.ModelSerializer):
     """ Serialize the Model """
+
     class Meta:
         """ define the model and its fields"""
         model = User
@@ -19,9 +21,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(validated_data['username'], validated_data['email'], validated_data['password'])
         return user
 
+
 class JoggingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Jogging
-        fields = ("id", "date", "distance")
+        fields = ("id", "date", "distance", "minutes")
+
     def create(self, validated_data):
         return Jogging.objects.create(**validated_data)
